@@ -447,7 +447,126 @@
         .contact-card a:hover {
             color: var(--primary-color);
         }
-        
+
+        /* Contact Form Styles */
+        .contact-form-container {
+            max-width: 700px;
+            margin: 50px auto 0;
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 5px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: var(--transition);
+            color: var(--dark-color);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 576px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-form-container {
+                padding: 25px;
+            }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .submit-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .form-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .form-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .form-message.loading {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
         /* Footer */
         footer {
             background-color: var(--dark-color);
@@ -847,6 +966,33 @@
                     <p><a href="https://linkedin.com/in/monica-dev" target="_blank">linkedin.com/in/monica-dev</a></p>
                 </div>
             </div>
+
+            <!-- Contact Form -->
+            <div class="contact-form-container fade-in">
+                <h3 style="text-align: center; margin-bottom: 30px;">Send Me a Message</h3>
+                <div id="formMessage" class="form-message"></div>
+                <form id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Your Name *</label>
+                            <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Your Email *</label>
+                            <input type="email" id="email" name="email" required placeholder="Enter your email address">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject *</label>
+                        <input type="text" id="subject" name="subject" required placeholder="What is this about?">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message *</label>
+                        <textarea id="message" name="message" required placeholder="Write your message here..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Send Message</button>
+                </form>
+            </div>
         </div>
     </section>
 
@@ -872,18 +1018,68 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Mobile menu toggle
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const navLinks = document.querySelector('.nav-links');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            mobileMenuBtn.innerHTML = navLinks.classList.contains('active') 
-                ? '<i class="fas fa-times"></i>' 
-                : '<i class="fas fa-bars"></i>';
-        });
-        
+    /*
+    Supabase Contact Form Integration
+    ================================
+
+    This script integrates your portfolio contact form with Supabase for storing messages.
+
+    Setup Instructions:
+    1. Create a Supabase project at https://supabase.com
+    2. Get your project URL and anon key from Settings > API
+    3. Update SUPABASE_URL and SUPABASE_ANON_KEY below
+    4. Create a table named 'contacts' with these columns:
+       - name (text)
+       - email (text)
+       - subject (text)
+       - message (text)
+       - status (text, default 'unread')
+       - created_at (timestamptz, default now())
+    5. Enable Row Level Security (RLS) and create a policy for anonymous inserts:
+       - Go to Authentication > Policies > contacts table
+       - Add policy: SELECT, INSERT for auth.role() = 'anon'
+    6. Test the connection by opening the page and checking console
+
+    If connection fails:
+    - Check network/firewall blocks supabase.co
+    - Verify credentials are correct
+    - Ensure table and policies are set up
+    - Messages will fallback to localStorage if Supabase is unavailable
+
+    */
+    (function() {
+        // Supabase Configuration - REPLACE WITH YOUR ACTUAL CREDENTIALS
+        // Get these from your Supabase project settings: https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api
+        const SUPABASE_URL = 'https://eudatijuhuhxrwmrmxat.supabase.co'; // Your actual Supabase project URL
+        const SUPABASE_ANON_KEY = 'sb_publishable_6ggoCaCUTQ34DuoIZbuAPw_y_vltwT4'; // Your actual anon/public key
+
+        // Instructions for setup:
+        // 1. Create a Supabase project at https://supabase.com
+        // 2. Go to Settings > API to get your URL and anon key
+        // 3. Create a table named 'contacts' with columns: name (text), email (text), subject (text), message (text), status (text)
+        // 4. Set up Row Level Security (RLS) policies to allow anonymous inserts on the 'contacts' table
+        // 5. If connection fails, check your network/firewall or project status
+
+        // Initialize or re-use Supabase client safely across live reload cycles
+        window.supabaseClient = window.supabaseClient || (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
+        const supabase = window.supabaseClient;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+
+            if (mobileMenuBtn && navLinks) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    mobileMenuBtn.innerHTML = navLinks.classList.contains('active')
+                        ? '<i class="fas fa-times"></i>'
+                        : '<i class="fas fa-bars"></i>';
+                });
+            }
+
         // Close mobile menu when clicking on a link
         document.querySelectorAll('.nav-links a').forEach(link => {
             link.addEventListener('click', () => {
@@ -891,31 +1087,31 @@
                 mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
             });
         });
-        
+
         // Scroll animations
         const fadeElements = document.querySelectorAll('.fade-in');
-        
+
         const appearOnScroll = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) return;
-                
+
                 entry.target.classList.add('appear');
                 observer.unobserve(entry.target);
             });
         }, { threshold: 0.1, rootMargin: "0px 0px -100px 0px" });
-        
+
         fadeElements.forEach(element => {
             appearOnScroll.observe(element);
         });
-        
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
                 e.preventDefault();
-                
+
                 const targetId = this.getAttribute('href');
                 if (targetId === '#') return;
-                
+
                 const targetElement = document.querySelector(targetId);
                 if (targetElement) {
                     window.scrollTo({
@@ -925,7 +1121,7 @@
                 }
             });
         });
-        
+
         // Header background on scroll
         window.addEventListener('scroll', () => {
             const header = document.querySelector('header');
@@ -937,9 +1133,154 @@
                 header.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
             }
         });
-        
+
         // Current year for copyright
-        document.querySelector('.copyright p').innerHTML = `&copy; ${new Date().getFullYear()} Monica. All Rights Reserved.`;
+        const copyrightP = document.querySelector('.copyright p');
+        if (copyrightP) {
+            copyrightP.innerHTML = `&copy; ${new Date().getFullYear()} Monica. All Rights Reserved.`;
+        }
+
+        // Contact Form Handler with Supabase
+        const contactForm = document.getElementById('contactForm');
+        const formMessage = document.getElementById('formMessage');
+
+        if (contactForm) {
+            contactForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const submitBtn = contactForm.querySelector('.submit-btn');
+                const name = document.getElementById('name').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const subject = document.getElementById('subject').value.trim();
+                const message = document.getElementById('message').value.trim();
+
+                // Validation
+                if (!name || !email || !subject || !message) {
+                    showFormMessage('Please fill in all fields', 'error');
+                    return;
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showFormMessage('Please enter a valid email address', 'error');
+                    return;
+                }
+
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Sending...';
+                showFormMessage('Sending your message...', 'loading');
+
+                try {
+                    // Try to insert into Supabase
+                    const { data, error } = await supabase
+                        .from('contacts')
+                        .insert([
+                            {
+                                name: name,
+                                email: email,
+                                subject: subject,
+                                message: message,
+                                status: 'unread'
+                            }
+                        ])
+                        .select();
+
+                    if (error) {
+                        console.error('Supabase error details:', error);
+
+                        // Handle specific error types
+                        if (error.status === 401 || error.status === 403) {
+                            showFormMessage('⚠️ Authentication/permission error: Supabase key cannot insert. Check anon key and RLS policies.', 'error');
+                            console.log('🔧 Fix: Confirm the anon key is correct and the contacts table has insert policy for auth.role() = "anon".');
+                        } else if (error.message && error.message.includes('row-level security policy')) {
+                            showFormMessage('⚠️ Database permission error. Please check the RLS policy to allow anonymous insert on contacts table.', 'error');
+                            console.log('🔧 Fix: Run the RLS policy SQL in Supabase SQL Editor.');
+                        } else if (error.message && (error.message.includes('relation') || error.message.includes('does not exist'))) {
+                            showFormMessage('⚠️ Database table missing. Please create the "contacts" table in Supabase.', 'error');
+                            console.log('🔧 Fix: Create the "contacts" table in Supabase.');
+                        } else {
+                            throw error;
+                        }
+
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Send Message';
+                        return;
+                    }
+
+                    // Success!
+                    showFormMessage('✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!', 'success');
+                    contactForm.reset();
+                    submitBtn.textContent = 'Message Sent! ✓';
+
+                    setTimeout(() => {
+                        submitBtn.textContent = 'Send Message';
+                        submitBtn.disabled = false;
+                    }, 3000);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    showFormMessage('❌ Failed to send message. Please try again later.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Send Message';
+                }
+            });
+        }
+
+        function showFormMessage(message, type) {
+            formMessage.textContent = message;
+            formMessage.className = `form-message ${type}`;
+            formMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    if (formMessage.className.includes(type)) {
+                        formMessage.style.display = 'none';
+                        setTimeout(() => {
+                            formMessage.style.display = '';
+                            formMessage.className = 'form-message';
+                        }, 300);
+                    }
+                }, 5000);
+            }
+        }
+
+        async function testConnection() {
+            try {
+                if (!supabase) {
+                    console.warn('Supabase client init failed – Supabase JS not loaded or credentials invalid.');
+                    return;
+                }
+
+                console.log('Testing Supabase connection via table query...');
+                const { data, error } = await supabase.from('contacts').select('id').limit(1);
+
+                if (error) {
+                    if (error.status === 401 || error.status === 403) {
+                        throw new Error('Authentication failed (401/403). Verify SUPABASE_ANON_KEY is correct and enabled for table access.');
+                    } else if (error.code === 'PGRST116') {
+                        throw new Error('Table "contacts" does not exist. Create it in Supabase Dashboard > Table Editor.');
+                    } else if (error.code === '42501') {
+                        throw new Error('Permission denied. Enable RLS and create policy for anonymous inserts on "contacts" table.');
+                    } else {
+                        throw new Error(`Table access failed: ${error.message}`);
+                    }
+                }
+
+                console.log('Supabase connection successful! Table "contacts" is accessible.');
+            } catch (error) {
+                console.error('Supabase connection failed:', error.message);
+                console.error('Full error details:', error);
+                console.log('Troubleshooting tips:');
+                console.log('1. Verify SUPABASE_URL and SUPABASE_ANON_KEY are correct.');
+                console.log('2. Ensure the "contacts" table exists with correct columns.');
+                console.log('3. Ensure RLS policy allows anon SELECT and INSERT on "contacts".');
+                console.log('4. Confirm your network allows access to supabase.co.');
+            }
+        }
+        testConnection();
+    });
+})();
     </script>
 </body>
 </html>
